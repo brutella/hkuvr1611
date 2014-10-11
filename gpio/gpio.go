@@ -5,7 +5,7 @@ import(
     "github.com/brutella/gouvr/uvr/1611"
     
     "github.com/kidoman/embd"
-    _"github.com/kidoman/embd/host/bbb"
+    // _"github.com/kidoman/embd/host/bbb"
     
     "log"
     "fmt"
@@ -16,7 +16,7 @@ func InitGPIO(file string) (embd.DigitalPin, error) {
     embd.InitGPIO()
     pin, pin_err := embd.NewDigitalPin(file)
     if pin_err != nil {
-        log.Fatal("Error opening pin! %s\n", pin_err)
+        log.Fatal("Error opening pin! \n", pin_err)
         return nil, pin_err
     }
     

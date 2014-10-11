@@ -4,16 +4,18 @@ import (
     "log"
     "fmt"
     "time"
+    "flag"
     
     "github.com/brutella/gouvr/uvr/1611"
     
     "github.com/brutella/hap/app"
     "github.com/brutella/hap/server"
-    "github.com/brutella/hap/model/service"
+    "github.com/brutella/hap/model"
     "github.com/brutella/hap/model/accessory"
     "github.com/brutella/hap/common"
     
     "github.com/brutella/hcuvr1611/gpio"
+    "github.com/brutella/hcuvr1611/mock"
 )
 
 func updateAccessories(packet uvr1611.Packet) {
@@ -42,7 +44,7 @@ func updateAccessories(packet uvr1611.Packet) {
     thermostat7.SetTemperature(float64(in7))
 }
 
-func accessorySensorName(name string) *service.Thermostat {
+func accessorySensorName(name string) model.Thermostat {
     thermostat, found := thermostats[name]
     if found == true {
         return thermostat
@@ -51,24 +53,37 @@ func accessorySensorName(name string) *service.Thermostat {
     fmt.Println("Create new thermostat for", name)
     
     serial := common.GetSerialNumberForAccessoryName(name, application.Storage)
-    info := service.NewAccessoryInfo(name, serial, "TA", "UVR1611")        
-    thermostat = service.NewThermostat(name, 0, 0.0, 200, 0.1)
-    acc := accessory.NewAccessory()
-    acc.AddService(info.Service)
-    acc.AddService(thermostat.Service)
+    info := model.Info{
+        Name: name,
+        Serial: serial, 
+        Manufacturer: "TA",
+        Model: "UVR1611",
+    }
     
-    application.AddAccessory(acc)
+    thermo := accessory.NewThermostat(info, 10, 0, 100, 1)
+    application.AddAccessory(thermo.Accessory)
+    thermostats[name] = thermo
     
-    thermostats[name] = thermostat
-    
-    return thermostat
+    return thermo
 }
 
 var application *app.App
-var thermostats map[string]*service.Thermostat
+var thermostats map[string]model.Thermostat
+
+
+type Connection interface {
+    Close()
+}
 
 func main() {
-    thermostats = map[string]*service.Thermostat{}
+    var (
+        mode = flag.String("conn", "sim", "Connection type; sim or gpio")
+        port = flag.String("port", "P8_07", "GPIO port; default P8_07")
+    )
+    
+    flag.Parse()
+    
+    thermostats = map[string]model.Thermostat{}
     
     conf := app.NewConfig()
     conf.DatabaseDir = "./data"
@@ -84,7 +99,7 @@ func main() {
         log.Fatal(err)
     }
     
-    gpio := gpio.NewConnection("P8_07", func(packet uvr1611.Packet) {
+    callback := func(packet uvr1611.Packet) {
         updateAccessories(packet)
 
         fmt.Println(time.Now().Format(time.Stamp))
@@ -97,10 +112,21 @@ func main() {
         fmt.Println("   Unten:", uvr1611.InputValueToString(packet.Input5))
         fmt.Println("Raumtemperatur:", uvr1611.InputValueToString(packet.Input6))
         fmt.Println("Wärmetauscher Sekundär:", uvr1611.InputValueToString(packet.Input7))
-    })
+    }
+    
+    var conn Connection
+    
+    switch *mode {
+    case "sim":
+        conn = mock.NewConnection(callback)
+    case "gpio":
+        conn = gpio.NewConnection(*port, callback)
+    default:
+        log.Fatal("Incorrect -conn flag")
+    }
     
     application.OnExit(func(){
-        gpio.Close()
+        conn.Close()
     })
     
     application.Run()

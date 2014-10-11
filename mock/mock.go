@@ -6,6 +6,7 @@ import(
     "fmt"
     "log"
     "time"
+    "math/rand"
 )
 
 type mock struct {
@@ -29,46 +30,50 @@ func B(b byte) uvr.Byte {
 func (m *mock) SimulatePackets() {
     ticker := time.NewTicker(5 * time.Second)
     
-    delta := byte(0x01)
+    m.sendRandomPacket()
     for _ = range ticker.C {
-        bytes := []uvr.Byte{
-            B(uvr.DeviceTypeUVR1611),
-            B(0x00),
-            B(0x00),
-            B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
-            B(0xFA + delta), B(0x20),
-            B(0xAF + delta), B(0x20),
-            B(0x11 + delta), B(0x20),
-            B(0x22 + delta), B(0x20),
-            B(0x33 + delta), B(0x20),
-            B(0x44 + delta), B(0x20),
-            B(0x55 + delta), B(0x20),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00), B(0x00),
-            B(0x00),
-            B(0x00),
-            B(0x00),
-            B(0x00),
-            B(0x00),
-            B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
-            B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
-        }
-        bytes = append(bytes, uvr1611.ChecksumFromBytes(bytes))
-        
-        packet, err := uvr1611.PacketFromBytes(bytes)
-        if err != nil {
-            log.Fatal(err)
-        }
-        
-        m.callback(packet)
-        delta += delta
+        m.sendRandomPacket()
     }
+}
+
+func (m *mock) sendRandomPacket() {
+    delta := byte(rand.Intn(120))
+    bytes := []uvr.Byte{
+        B(uvr.DeviceTypeUVR1611),
+        B(0x00),
+        B(0x00),
+        B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
+        B(0xFA + delta), B(0x20),
+        B(0xAF + delta), B(0x20),
+        B(0x11 + delta), B(0x20),
+        B(0x22 + delta), B(0x20),
+        B(0x33 + delta), B(0x20),
+        B(0x44 + delta), B(0x20),
+        B(0x55 + delta), B(0x20),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00), B(0x00),
+        B(0x00),
+        B(0x00),
+        B(0x00),
+        B(0x00),
+        B(0x00),
+        B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
+        B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
+    }
+    bytes = append(bytes, uvr1611.ChecksumFromBytes(bytes))
+    
+    packet, err := uvr1611.PacketFromBytes(bytes)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    m.callback(packet)
 }
