@@ -28,7 +28,7 @@ func B(b byte) uvr.Byte {
 }
 
 func (m *mock) SimulatePackets() {
-    ticker := time.NewTicker(5 * time.Second)
+    ticker := time.NewTicker(7 * time.Second)
     
     m.sendRandomPacket()
     for _ = range ticker.C {
@@ -39,17 +39,18 @@ func (m *mock) SimulatePackets() {
 func (m *mock) sendRandomPacket() {
     delta := byte(rand.Intn(120))
     bytes := []uvr.Byte{
-        B(uvr.DeviceTypeUVR1611),
+        B(byte(uvr.DeviceTypeUVR1611)),
         B(0x00),
         B(0x00),
         B(0x00), B(0x00), B(0x00), B(0x00), B(0x00),
         B(0xFA + delta), B(0x20),
-        B(0xAF + delta), B(0x20),
+        B(0xAF + delta), B(0x72),
         B(0x11 + delta), B(0x20),
         B(0x22 + delta), B(0x20),
         B(0x33 + delta), B(0x20),
         B(0x44 + delta), B(0x20),
         B(0x55 + delta), B(0x20),
+        B(0x00), B(0x90),
         B(0x00), B(0x00),
         B(0x00), B(0x00),
         B(0x00), B(0x00),
@@ -58,8 +59,7 @@ func (m *mock) sendRandomPacket() {
         B(0x00), B(0x00),
         B(0x00), B(0x00),
         B(0x00), B(0x00),
-        B(0x00), B(0x00),
-        B(0x00), B(0x00),
+        B(0xA5), B(0x00),
         B(0x00),
         B(0x00),
         B(0x00),
