@@ -14,14 +14,14 @@ import (
     "github.com/brutella/hap/model"
     "github.com/brutella/hap/common"
     
-    "github.com/brutella/hkuvr1611/gpio"
+    // "github.com/brutella/hkuvr1611/gpio"
     "github.com/brutella/hkuvr1611/mock"
 )
 
 func HandlePacket(p uvr1611.Packet) {
     inputs := hkuvr1611.InputValuesFromPacket(p)
     for i, v := range inputs {
-        HandleInputValueWithName(v, fmt.Sprintf("Input %d", i+1))
+        HandleInputValueWithName(v, fmt.Sprintf("Sensor %d", i+1))
     }
     
     outlets := uvr1611.OutletsFromValue(p.Outgoing)
@@ -152,7 +152,7 @@ func main() {
     case "sim":
         conn = mock.NewConnection(callback)
     case "gpio":
-        conn = gpio.NewConnection(*port, callback)
+        // conn = gpio.NewConnection(*port, callback)
     default:
         log.Fatal("Incorrect -conn flag")
     }
