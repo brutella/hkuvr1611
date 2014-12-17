@@ -4,6 +4,7 @@ import (
     "fmt"
     "time"
     "flag"
+    "reflect"
     
     "github.com/brutella/hkuvr1611"
     "github.com/brutella/gouvr/uvr"
@@ -45,7 +46,7 @@ func HandleInputValueWithName(v uvr.Value, name string) {
     if s, found = sensors[name]; found == false {
         s := hkuvr1611.NewSensorForInputValue(v, InfoForAccessoryName(name))
         if s != nil {
-            log.Println("[INFO] New input sensor", name)
+            log.Println("[INFO]", reflect.TypeOf(s.Model), "with name", name)
             application.AddAccessory(s.Accessory)
             sensors[name] = s
         }
@@ -63,7 +64,7 @@ func HandleOutletWithName(o uvr1611.Outlet, name string) {
     if s, found = sensors[name]; found == false {
         s := hkuvr1611.NewSensorForOutlet(o, InfoForAccessoryName(name))
         if s != nil {
-            log.Println("[INFO] New outlet sensor", name)
+            log.Println("[INFO]", reflect.TypeOf(s.Model), "with name", name)
             application.AddAccessory(s.Accessory)
             sensors[name] = s
         }
@@ -106,7 +107,8 @@ type Connection interface {
 
 func main() {
     var (
-        mode = flag.String("conn", "sim", "Connection type; sim or gpio")
+        mode = flag.String("conn", "mock", "Connection type; mock, gpio, replay")
+        file = flag.String("file", "", "Log file from which to replay packets")
         port = flag.String("port", "P8_07", "GPIO port; default P8_07")
         timeout = flag.Int("timeout", 120, "Timeout in seconds until accessories are not reachable")
     )
@@ -149,8 +151,10 @@ func main() {
     
     fmt.Println(port)
     switch *mode {
-    case "sim":
+    case "mock":
         conn = mock.NewConnection(callback)
+    case "replay":
+        conn = mock.NewReplayConnection(*file, callback)
     case "gpio":
         // conn = gpio.NewConnection(*port, callback)
     default:

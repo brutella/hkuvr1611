@@ -43,7 +43,7 @@ func NewSensorForInputValue(v uvr.Value, info model.Info) *Sensor {
         t := accessory.NewThermostat(info, 0, -50, 199, 1)
         s = &Sensor{t, t.Accessory}
     case uvr1611.InputTypeTemperature:
-        t := accessory.NewThermometer(info, 0)
+        t := accessory.NewThermometer(info, 0, -50, 199, 1)
         s = &Sensor{t, t.Accessory}
     case uvr1611.InputTypeVolumeFlow:
         // TODO(brutella) ?
@@ -106,7 +106,12 @@ func UpdateAccessoryWithInputValue(a model.Accessory, v uvr.Value) error {
             case uvr1611.RoomTemperatureModeStandby:
                 mode = model.ModeOff
             }
-            thermostat.SetMode(mode)
+            if mode == model.ModeAuto {
+                thermostat.SetMode(model.ModeOff)
+            } else {
+                thermostat.SetMode(mode)
+            }
+            
             thermostat.SetTemperature(float64(value))
             // Target == Current
             thermostat.SetTargetTemperature(float64(value))
