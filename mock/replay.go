@@ -25,7 +25,7 @@ func (r *replay) Close() {
 }
 
 func (r *replay) SimulatePackets() {
-    ticker := time.NewTicker(7 * time.Second)
+    ticker := time.NewTicker(10 * time.Second)
     
     r.sendPacket()
     for _ = range ticker.C {
@@ -42,7 +42,6 @@ func (r *replay) sendPacket() {
     replayer        := uvr.NewReplayer(interrupt)
     
     packetReceiver.RegisterCallback(func(packet uvr1611.Packet) {
-        packet.Log()
         r.callback(packet)
         syncDecoder.Reset()
         byteDecoder.Reset()

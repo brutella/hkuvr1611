@@ -28,7 +28,7 @@ func B(b byte) uvr.Byte {
 }
 
 func (m *mock) SimulatePackets() {
-    ticker := time.NewTicker(7 * time.Second)
+    ticker := time.NewTicker(10 * time.Second)
     
     m.sendRandomPacket()
     for _ = range ticker.C {
