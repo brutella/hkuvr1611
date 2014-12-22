@@ -5,7 +5,7 @@ import(
     "github.com/brutella/gouvr/uvr/1611"
     
     "github.com/kidoman/embd"
-    _"github.com/kidoman/embd/host/bbb"
+    _"github.com/kidoman/embd/host/all"
     
     "log"
     "fmt"

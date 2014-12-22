@@ -15,7 +15,7 @@ import (
     "github.com/brutella/hap/model"
     "github.com/brutella/hap/common"
     
-    // "github.com/brutella/hkuvr1611/gpio"
+    "github.com/brutella/hkuvr1611/gpio"
     "github.com/brutella/hkuvr1611/mock"
 )
 
@@ -149,14 +149,13 @@ func main() {
     
     var conn Connection
     
-    fmt.Println(port)
     switch *mode {
     case "mock":
         conn = mock.NewConnection(callback)
     case "replay":
         conn = mock.NewReplayConnection(*file, callback)
     case "gpio":
-        // conn = gpio.NewConnection(*port, callback)
+        conn = gpio.NewConnection(*port, callback)
     default:
         log.Fatal("Incorrect -conn flag")
     }
