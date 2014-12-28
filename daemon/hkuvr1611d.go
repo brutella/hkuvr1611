@@ -105,6 +105,11 @@ type Connection interface {
     Close()
 }
 
+// This app can connect to the UVR1611 data bus and provide the sensor values to HomeKit clients
+//
+// Optimizations: To improve the performance on a Raspberry Pi B+, the interrupt handler of the
+// gpio pin is removed every time after successfully decoding a packet. This allows other goroutines
+// (e.g. HAP server) to do their job more quickly.
 func main() {
     var (
         mode = flag.String("conn", "mock", "Connection type; mock, gpio, replay")
@@ -141,7 +146,7 @@ func main() {
         application.PerformBatchUpdates(func(){
             HandlePacket(packet)
             application.SetReachable(true)
-        })        
+        })
         // fmt.Println(time.Now().Format(time.Stamp))
         // packet.Log()
         timer.Reset(timer_duration)

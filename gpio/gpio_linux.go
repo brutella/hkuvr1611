@@ -10,6 +10,7 @@ import(
     "log"
     "fmt"
     "math/big"
+    "time"
 )
 
 func InitGPIO(file string) (embd.DigitalPin, error) {
@@ -41,25 +42,36 @@ func NewConnection(file string, callback uvr1611.PacketCallback) *gpio {
     syncDecoder     := uvr1611.NewSyncDecoder(byteDecoder, byteDecoder, uvr.NewTimeout(488.0*2, 0.4))
     signal          := uvr.NewSignal(syncDecoder)
     
-    packetReceiver.RegisterCallback(func(packet uvr1611.Packet) {
-        if callback != nil {
-            callback(packet)
-        }
-        
-        syncDecoder.Reset()
-        byteDecoder.Reset()
-        packetDecoder.Reset()
-    })
-    
-    err = pin.Watch(embd.EdgeBoth, func(pin embd.DigitalPin) {
+    pin_callback := func(pin embd.DigitalPin) {
         value, read_err := pin.Read()
         if read_err != nil {
             fmt.Println(read_err)
         } else {
             signal.Consume(big.Word(value))
         }
+    }
+    
+    packetReceiver.RegisterCallback(func(packet uvr1611.Packet) {
+        if callback != nil {
+            callback(packet)
+        }
+        
+        // Stop watching the pin and let other threads do their job
+        pin.StopWatching()
+        syncDecoder.Reset()
+        byteDecoder.Reset()
+        packetDecoder.Reset()
+        
+        // Rewatch after 10 seconds again
+        time.AfterFunc(10 * time.Second, func() {
+            pin.Watch(embd.EdgeBoth, pin_callback)
+            if err != nil {
+                log.Fatal("Could not watch pin.", err)
+            }
+        })
     })
-     
+    
+    err = pin.Watch(embd.EdgeBoth, pin_callback)
     if err != nil {
         log.Fatal("Could not watch pin.", err)
     }
