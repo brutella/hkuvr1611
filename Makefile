@@ -1,6 +1,9 @@
 GO ?= go
-	
-test: 
+
+run:
+	$(GO) run daemon/hkuvr1611d.go
+
+test:
 	$(GO) test ./...
 
 bbb:
