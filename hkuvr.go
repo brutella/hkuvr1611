@@ -96,19 +96,19 @@ func UpdateAccessoryWithInputValue(a model.Accessory, v uvr.Value) error {
 		}
 	case uvr1611.InputTypeRoomTemperature:
 		if thermostat, ok := a.(model.Thermostat); ok == true {
-			mode := model.ModeOff
+			mode := model.HeatCoolModeOff
 			switch uvr1611.RoomTemperatureModeFromValue(v) {
 			case uvr1611.RoomTemperatureModeAutomatic:
-				mode = model.ModeAuto
+				mode = model.HeatCoolModeAuto
 			case uvr1611.RoomTemperatureModeNormal:
-				mode = model.ModeHeating
+				mode = model.HeatCoolModeHeat
 			case uvr1611.RoomTemperatureModeLowering:
-				mode = model.ModeCooling
+				mode = model.HeatCoolModeCool
 			case uvr1611.RoomTemperatureModeStandby:
-				mode = model.ModeOff
+				mode = model.HeatCoolModeOff
 			}
-			if mode == model.ModeAuto {
-				thermostat.SetMode(model.ModeOff)
+			if mode == model.HeatCoolModeAuto {
+				thermostat.SetMode(model.HeatCoolModeOff)
 			} else {
 				thermostat.SetMode(mode)
 			}

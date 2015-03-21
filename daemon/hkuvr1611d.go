@@ -11,7 +11,6 @@ import (
 	"github.com/brutella/hc/common"
 	"github.com/brutella/hc/hap"
 	"github.com/brutella/hc/model"
-	"github.com/brutella/hc/server"
 	"github.com/brutella/hkuvr1611"
 	"github.com/brutella/log"
 
@@ -124,7 +123,7 @@ func main() {
 	conf.DatabaseDir = "./data"
 	conf.BridgeName = "UVR1611Bridge"
 
-	pwd, _ := server.NewPassword("11122333")
+	pwd, _ := hap.NewPassword("11122333")
 	conf.BridgePassword = pwd
 	conf.BridgeManufacturer = "Matthias H."
 
