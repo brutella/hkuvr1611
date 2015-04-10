@@ -8,9 +8,9 @@ import (
 
 	"github.com/brutella/gouvr/uvr"
 	"github.com/brutella/gouvr/uvr/1611"
-	"github.com/brutella/hc/common"
 	"github.com/brutella/hc/hap"
 	"github.com/brutella/hc/model"
+	"github.com/brutella/hc/model/accessory"
 	"github.com/brutella/hkuvr1611"
 	"github.com/brutella/log"
 
@@ -18,35 +18,40 @@ import (
 	"github.com/brutella/hkuvr1611/mock"
 )
 
-func HandlePacket(p uvr1611.Packet) {
+func HandlePacket(p uvr1611.Packet) []*accessory.Accessory {
+	var sensors []*accessory.Accessory
 	inputs := hkuvr1611.InputValuesFromPacket(p)
 	for i, v := range inputs {
-		HandleInputValueWithName(v, fmt.Sprintf("Sensor %d", i+1))
+		s := HandleInputValueWithName(v, fmt.Sprintf("Sensor %d", i+1))
+		sensors = append(sensors, s.Accessory)
 	}
 
 	outlets := uvr1611.OutletsFromValue(p.Outgoing)
 	for i, v := range outlets {
-		HandleOutletWithName(v, fmt.Sprintf("Outlet %d", i+1))
+		s := HandleOutletWithName(v, fmt.Sprintf("Outlet %d", i+1))
+		sensors = append(sensors, s.Accessory)
 	}
 
 	h1, h2 := uvr1611.AreHeatMetersEnabled(p.HeatRegister)
 	if h1 == true {
-		HandleHeatMeterWithName(p.HeatMeter1, "Heat Meter 1")
+		s := HandleHeatMeterWithName(p.HeatMeter1, "Heat Meter 1")
+		sensors = append(sensors, s.Accessory)
 	}
 
 	if h2 == true {
-		HandleHeatMeterWithName(p.HeatMeter2, "Heat Meter 2")
+		s := HandleHeatMeterWithName(p.HeatMeter2, "Heat Meter 2")
+		sensors = append(sensors, s.Accessory)
 	}
+
+	return sensors
 }
 
-func HandleInputValueWithName(v uvr.Value, name string) {
-	var s *hkuvr1611.Sensor
+func HandleInputValueWithName(v uvr.Value, name string) (s *hkuvr1611.Sensor) {
 	var found bool
 	if s, found = sensors[name]; found == false {
-		s := hkuvr1611.NewSensorForInputValue(v, InfoForAccessoryName(name))
+		s = hkuvr1611.NewSensorForInputValue(v, InfoForAccessoryName(name))
 		if s != nil {
 			log.Println("[INFO]", reflect.TypeOf(s.Model), "with name", name)
-			application.AddAccessory(s.Accessory)
 			sensors[name] = s
 		}
 	} else {
@@ -55,16 +60,15 @@ func HandleInputValueWithName(v uvr.Value, name string) {
 			log.Println("[ERRO]", err)
 		}
 	}
+	return s
 }
 
-func HandleOutletWithName(o uvr1611.Outlet, name string) {
-	var s *hkuvr1611.Sensor
+func HandleOutletWithName(o uvr1611.Outlet, name string) (s *hkuvr1611.Sensor) {
 	var found bool
 	if s, found = sensors[name]; found == false {
-		s := hkuvr1611.NewSensorForOutlet(o, InfoForAccessoryName(name))
+		s = hkuvr1611.NewSensorForOutlet(o, InfoForAccessoryName(name))
 		if s != nil {
 			log.Println("[INFO]", reflect.TypeOf(s.Model), "with name", name)
-			application.AddAccessory(s.Accessory)
 			sensors[name] = s
 		}
 	} else {
@@ -73,17 +77,17 @@ func HandleOutletWithName(o uvr1611.Outlet, name string) {
 			log.Println("[ERRO]", err)
 		}
 	}
+
+	return s
 }
 
-func HandleHeatMeterWithName(hm uvr.HeatMeterValue, name string) {
-	// TODO
+func HandleHeatMeterWithName(hm uvr.HeatMeterValue, name string) (s *hkuvr1611.Sensor) {
+	return nil
 }
 
 func InfoForAccessoryName(name string) model.Info {
-	serial := common.GetSerialNumberForAccessoryName(name, application.Storage)
 	info := model.Info{
 		Name:         name,
-		SerialNumber: serial,
 		Manufacturer: "TA",
 		Model:        "UVR1611",
 	}
@@ -92,7 +96,8 @@ func InfoForAccessoryName(name string) model.Info {
 }
 
 // Access to HAP app
-var application *hap.App
+var transport hap.Transport
+var uvrAccessory *accessory.Accessory
 
 // List of sensors
 var sensors map[string]*hkuvr1611.Sensor
@@ -118,40 +123,43 @@ func main() {
 	)
 
 	flag.Parse()
-
-	conf := hap.NewConfig()
-	conf.DatabaseDir = "./data"
-	conf.BridgeName = "UVR1611Bridge"
-
-	pwd, _ := hap.NewPassword("11122333")
-	conf.BridgePassword = pwd
-	conf.BridgeManufacturer = "Matthias H."
-
-	var err error
-	application, err = hap.NewApp(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	sensors = map[string]*hkuvr1611.Sensor{}
+
+	info := InfoForAccessoryName("UVR1611")
+	uvrAccessory = accessory.New(info)
 
 	timer_duration := time.Duration(*timeout) * time.Second
 	timer = time.AfterFunc(timer_duration, func() {
 		log.Println("[INFO] Not Reachable")
-		application.SetReachable(false)
+		if transport != nil {
+			sensors = map[string]*hkuvr1611.Sensor{}
+			transport.Stop()
+			transport = nil
+		}
 	})
 
+	var conn Connection
 	callback := func(packet uvr1611.Packet) {
-		application.PerformBatchUpdates(func() {
-			HandlePacket(packet)
-			application.SetReachable(true)
-		})
-		// fmt.Println(time.Now().Format(time.Stamp))
-		// packet.Log()
+		sensors := HandlePacket(packet)
+		if transport == nil {
+			var err error
+			transport, err = hap.NewIPTransport("00102003", uvrAccessory, sensors...)
+
+			transport.OnStop(func() {
+				timer.Stop()
+				conn.Close()
+			})
+
+			go func() {
+				transport.Start()
+			}()
+
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		timer.Reset(timer_duration)
 	}
-
-	var conn Connection
 
 	switch *mode {
 	case "mock":
@@ -164,10 +172,5 @@ func main() {
 		log.Fatal("Incorrect -conn flag")
 	}
 
-	application.OnExit(func() {
-		timer.Stop()
-		conn.Close()
-	})
-
-	application.RunAndPublish(false)
+	select {}
 }

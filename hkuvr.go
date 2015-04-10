@@ -33,11 +33,14 @@ func NewSensorForInputValue(v uvr.Value, info model.Info) *Sensor {
 	input_type, _ := uvr1611.DecodeInputValue(v)
 
 	var s *Sensor
+	inUse := true
 	switch input_type {
 	case uvr1611.InputTypeUnused:
-		break
+		inUse = false
+		fallthrough
 	case uvr1611.InputTypeDigital:
 		o := accessory.NewOutlet(info)
+		o.SetInUse(inUse)
 		s = &Sensor{o, o.Accessory}
 	case uvr1611.InputTypeRoomTemperature:
 		// -50 ... +199°C
