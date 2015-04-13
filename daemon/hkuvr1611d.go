@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"reflect"
 	"time"
 
@@ -144,12 +145,6 @@ func main() {
 		if transport == nil {
 			var err error
 			transport, err = hap.NewIPTransport("00102003", uvrAccessory, sensors...)
-
-			transport.OnStop(func() {
-				timer.Stop()
-				conn.Close()
-			})
-
 			go func() {
 				transport.Start()
 			}()
@@ -171,6 +166,15 @@ func main() {
 	default:
 		log.Fatal("Incorrect -conn flag")
 	}
+
+	hap.OnTermination(func() {
+		if transport != nil {
+			transport.Stop()
+		}
+		conn.Close()
+		timer.Stop()
+		os.Exit(1)
+	})
 
 	select {}
 }
