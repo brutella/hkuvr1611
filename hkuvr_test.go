@@ -73,8 +73,8 @@ func TestThermostat(t *testing.T) {
 	assert.NotNil(t, thermostat)
 	assert.Equal(t, fmt.Sprintf("%.1f", thermostat.Temperature()), "22.1")
 	assert.Equal(t, fmt.Sprintf("%.1f", thermostat.TargetTemperature()), "22.1")
-	assert.Equal(t, thermostat.Mode(), model.ModeHeating)
-	assert.Equal(t, thermostat.TargetMode(), model.ModeHeating)
+	assert.Equal(t, thermostat.Mode(), model.HeatCoolModeHeat)
+	assert.Equal(t, thermostat.TargetMode(), model.HeatCoolModeHeat)
 }
 
 func TestOutlet(t *testing.T) {

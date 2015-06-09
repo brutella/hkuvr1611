@@ -24,24 +24,32 @@ func HandlePacket(p uvr1611.Packet) []*accessory.Accessory {
 	inputs := hkuvr1611.InputValuesFromPacket(p)
 	for i, v := range inputs {
 		s := HandleInputValueWithName(v, fmt.Sprintf("Sensor %d", i+1))
-		sensors = append(sensors, s.Accessory)
+		if s != nil {
+			sensors = append(sensors, s.Accessory)
+		}
 	}
 
 	outlets := uvr1611.OutletsFromValue(p.Outgoing)
 	for i, v := range outlets {
 		s := HandleOutletWithName(v, fmt.Sprintf("Outlet %d", i+1))
-		sensors = append(sensors, s.Accessory)
+		if s != nil {
+			sensors = append(sensors, s.Accessory)
+		}
 	}
 
 	h1, h2 := uvr1611.AreHeatMetersEnabled(p.HeatRegister)
 	if h1 == true {
 		s := HandleHeatMeterWithName(p.HeatMeter1, "Heat Meter 1")
-		sensors = append(sensors, s.Accessory)
+		if s != nil {
+			sensors = append(sensors, s.Accessory)
+		}
 	}
 
 	if h2 == true {
 		s := HandleHeatMeterWithName(p.HeatMeter2, "Heat Meter 2")
-		sensors = append(sensors, s.Accessory)
+		if s != nil {
+			sensors = append(sensors, s.Accessory)
+		}
 	}
 
 	return sensors
@@ -116,6 +124,8 @@ type Connection interface {
 // gpio pin is removed every time after successfully decoding a packet. This allows other goroutines
 // (e.g. HAP server) to do their job more quickly.
 func main() {
+	log.Verbose = false
+
 	var (
 		mode    = flag.String("conn", "mock", "Connection type; mock, gpio, replay")
 		file    = flag.String("file", "", "Log file from which to replay packets")
