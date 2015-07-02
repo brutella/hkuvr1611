@@ -6,22 +6,22 @@ The hkuvr1611 is a daemon to simulate a HomeKit bridge for an [UVR1611][uvr1611]
 [hc]: https://github.com/brutella/hc
 [gouvr]: https://github.com/brutella/gouvr
 
+
 ## Build
 
-You can use the included Makefile to build the `daemon/hkuvr1611d.go` for a RaspberryPi and Beaglebone Black.
-
-```make
-// RaspberryPi
-make rpi
+Build `hkuvr1611d.go` using `go build daemon/hkuvr1611d.go` or use the Makefile to build for Beaglebone Black
     
-// Beaglebone Black
-make bbb
-```
+    make bbb
+    
+or Raspberry Pi
 
-## Usage
+    make rpi
+
+## Run
 
 You need to provide the following arguments when running the `hkuvr1611d` daemon.
 
+- pin: Accessory pin required for pairing
 - conn: Specifies the connection type
     - mock: Simulates the data bus with random values; *default*
     - gpio: Uses a gpio to connect to the data bus
@@ -30,9 +30,23 @@ You need to provide the following arguments when running the `hkuvr1611d` daemon
 - port: GPIO port; *default: P8_07*
 - timeout: Timeout in seconds until accessories are not reachable; *default: 120*
 
-Example
+#### Examples
+    
+    // Simulate
+    hkuvr1611d -pin=32112321
+    
+    // Connect via GPIO
+    hkuvr1611d -pin=32112321 -conn=gpio -port=P8_07
 
-    hkuvr1611d -conn=gpio -port=P8_07 -timeout=360
+## HomeKit Client
+
+You need an iOS app to control HomeKit accessories. 
+You can use [Home][home] which runs on iPhone, iPad and Apple Watch.
+
+Read the [Getting Started][home-getting-started] guide.
+
+[home]: http://selfcoded.com/home/
+[home-getting-started]: http://selfcoded.com/home/getting-started/
 
 # Contact
 

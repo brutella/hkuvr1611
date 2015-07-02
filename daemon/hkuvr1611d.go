@@ -127,6 +127,7 @@ func main() {
 	log.Verbose = false
 
 	var (
+		pin     = flag.String("pin", "", "Accessory pin required for pairing")
 		mode    = flag.String("conn", "mock", "Connection type; mock, gpio, replay")
 		file    = flag.String("file", "", "Log file from which to replay packets")
 		port    = flag.String("port", "P8_07", "GPIO port; default P8_07")
@@ -154,7 +155,7 @@ func main() {
 		sensors := HandlePacket(packet)
 		if transport == nil {
 			var err error
-			transport, err = hap.NewIPTransport("00102003", uvrAccessory, sensors...)
+			transport, err = hap.NewIPTransport(*pin, uvrAccessory, sensors...)
 			go func() {
 				transport.Start()
 			}()
