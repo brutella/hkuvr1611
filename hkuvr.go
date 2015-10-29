@@ -44,10 +44,10 @@ func NewSensorForInputValue(v uvr.Value, info model.Info) *Sensor {
 		s = &Sensor{o, o.Accessory}
 	case uvr1611.InputTypeRoomTemperature:
 		// -50 ... +199°C
-		t := accessory.NewThermostat(info, 0, -50, 199, 1)
+		t := accessory.NewTemperatureSensor(info, 0, -50, 199, 1)
 		s = &Sensor{t, t.Accessory}
 	case uvr1611.InputTypeTemperature:
-		t := accessory.NewThermometer(info, 0, -50, 199, 1)
+		t := accessory.NewTemperatureSensor(info, 0, -50, 199, 1)
 		s = &Sensor{t, t.Accessory}
 	case uvr1611.InputTypeVolumeFlow:
 		// TODO(brutella) ?
