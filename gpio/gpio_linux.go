@@ -62,7 +62,7 @@ func NewConnection(file string, callback uvr1611.PacketCallback) *gpio {
 		byteDecoder.Reset()
 		packetDecoder.Reset()
 
-		// Rewatch after 10 seconds again
+		// Rewatch after 30 seconds again
 		time.AfterFunc(30*time.Second, func() {
 			pin.Watch(embd.EdgeBoth, pin_callback)
 			if err != nil {

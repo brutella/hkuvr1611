@@ -98,7 +98,9 @@ func UpdateAccessoryWithInputValue(a model.Accessory, v uvr.Value) error {
 			return errors.New("Digital input expects outlet accessory")
 		}
 	case uvr1611.InputTypeRoomTemperature:
-		if thermostat, ok := a.(model.Thermostat); ok == true {
+		if sensor, ok := a.(model.Thermometer); ok == true {
+			sensor.SetTemperature(float64(value))
+		} else if thermostat, ok := a.(model.Thermostat); ok == true {
 			mode := model.HeatCoolModeOff
 			switch uvr1611.RoomTemperatureModeFromValue(v) {
 			case uvr1611.RoomTemperatureModeAutomatic:

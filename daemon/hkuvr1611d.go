@@ -124,7 +124,6 @@ type Connection interface {
 // gpio pin is removed every time after successfully decoding a packet. This allows other goroutines
 // (e.g. HAP server) to do their job more quickly.
 func main() {
-	log.Verbose = false
 
 	var (
 		pin     = flag.String("pin", "", "Accessory pin required for pairing")
@@ -154,14 +153,14 @@ func main() {
 	callback := func(packet uvr1611.Packet) {
 		sensors := HandlePacket(packet)
 		if transport == nil {
-			var err error
-			transport, err = hap.NewIPTransport(*pin, uvrAccessory, sensors...)
-			go func() {
-				transport.Start()
-			}()
-
-			if err != nil {
+			config := hap.Config{Pin: *pin}
+			if t, err := hap.NewIPTransport(config, uvrAccessory, sensors...); err != nil {
 				log.Fatal(err)
+			} else {
+				go func() {
+					t.Start()
+				}()
+				transport = t
 			}
 		}
 		timer.Reset(timer_duration)
