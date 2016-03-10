@@ -137,7 +137,7 @@ func main() {
 	sensors = map[string]*hkuvr1611.Sensor{}
 
 	info := InfoForAccessoryName("UVR1611")
-	uvrAccessory = accessory.New(info)
+	uvrAccessory = accessory.New(info, accessory.TypeBridge)
 
 	timer_duration := time.Duration(*timeout) * time.Second
 	timer = time.AfterFunc(timer_duration, func() {
